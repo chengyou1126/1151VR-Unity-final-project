@@ -1,5 +1,8 @@
 # 感染日（D-Day）
 
+> 模型資料夾（Google Drive）：https://drive.google.com/drive/folders/1GTENIeQ3OesRPqbu8blcmWbO_TY1LvXQ?usp=sharing
+
+
 Unity 3D 第一人稱探索 / 潛行 / 解謎 / 逃脫遊戲，全程使用藍牙手把操作。
 四個關卡、三個環境、全遊戲共用 5 條命。完整設計請看遊戲規劃書。
 
