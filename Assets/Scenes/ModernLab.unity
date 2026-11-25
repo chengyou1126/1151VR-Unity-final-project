@@ -484,7 +484,7 @@ Transform:
   m_GameObject: {fileID: 31845832}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: -0.7071068}
-  m_LocalPosition: {x: 24, y: 0.06611638, z: 38}
+  m_LocalPosition: {x: 38, y: 0.10000019, z: 38}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -500,11 +500,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2502734870780688978, guid: 193f6751209823841b3418a516b25c8f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 24
+      value: 38
       objectReference: {fileID: 0}
     - target: {fileID: 2502734870780688978, guid: 193f6751209823841b3418a516b25c8f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.06611638
+      value: 0.10000019
       objectReference: {fileID: 0}
     - target: {fileID: 2502734870780688978, guid: 193f6751209823841b3418a516b25c8f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -15438,8 +15438,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4159976427231384352, guid: 0dd2a1c8e0c3558449c64459b3851dc1, type: 3}
       propertyPath: 'hintLines.Array.data[1]'
-      value: "\u8D70\u8FD1\u5F8C\u7528\u53F3\u6416\u687F\u7784\u6E96\uFF0C\u6309
-        A \u62FE\u53D6\u3002\u627E\u5230\u4E4B\u5F8C\u6703\u81EA\u52D5\u9032\u5165\u62FC\u63A5\u3002"
+      value: "靠近照片後瞄準它，按 E 拾取（手把按 A）。兩半收齊後會自動進入拼接。"
       objectReference: {fileID: 0}
     - target: {fileID: 4595413697228974499, guid: 0dd2a1c8e0c3558449c64459b3851dc1, type: 3}
       propertyPath: m_LocalPosition.x
@@ -26578,15 +26577,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4655175390993766814, guid: 14d4a81cd5e50d94cae89280ea4bdbac, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 6
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 4655175390993766814, guid: 14d4a81cd5e50d94cae89280ea4bdbac, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.2622703
+      value: 3.26
       objectReference: {fileID: 0}
     - target: {fileID: 4655175390993766814, guid: 14d4a81cd5e50d94cae89280ea4bdbac, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 40
+      value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 4655175390993766814, guid: 14d4a81cd5e50d94cae89280ea4bdbac, type: 3}
       propertyPath: m_LocalRotation.w

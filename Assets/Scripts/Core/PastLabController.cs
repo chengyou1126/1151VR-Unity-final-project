@@ -171,7 +171,7 @@ public class PastLabController : MonoBehaviour
         foreach (var go in stage4Only) if (go != null) go.SetActive(true);
         foreach (var a in stage4Alarms) a.SetRunning(true);
         ui.SetPhotoProgress(0, 0);
-        ui.SetMission("躲避三名守衛，回到最初穿越過來的位置");
+        ui.SetMission("躲避守衛，回到升降台東側的時空穿越點");
 
         // 被抓到時從密室門外重新開始
         var cp = PlayerCheckpoint.Instance;

@@ -240,18 +240,18 @@ public class UIManager : MonoBehaviour
         howToPanel = UIFactory.Panel(Root, "HowToPlay", new Color(0.02f, 0.03f, 0.05f, 0.95f)).gameObject;
         UIFactory.Stretch(howToPanel.GetComponent<RectTransform>());
         var ht = UIFactory.Label(howToPanel.transform, "Title", "How to Play  操作說明", 64, Color.white, TextAnchor.MiddleCenter);
-        UIFactory.Place(ht.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -90), new Vector2(1400, 100));
+        UIFactory.Place(ht.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -56), new Vector2(1400, 84), new Vector2(0.5f, 1f));
         var keys = UIFactory.Label(howToPanel.transform, "Keys", "左類比搖桿\n右類比搖桿\nRB\nLB\nB\nA\nX\nY\nStart\n方向鍵 / 左搖桿", 34, UIFactory.Cyan, TextAnchor.UpperRight);
-        UIFactory.Place(keys.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-40, 110), new Vector2(520, 560), new Vector2(1f, 0.5f));
+        UIFactory.Place(keys.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-40, -178), new Vector2(520, 560), new Vector2(1f, 1f));
         keys.lineSpacing = 1.2f;
         var funcs = UIFactory.Label(howToPanel.transform, "Funcs", "移動\n視角\n奔跑（按住）\n跳躍\n蹲下（按住）；介面中 = 返回\n互動 / 確認\n任務資訊\n照片收集\n暫停\n切換選項", 34, Color.white);
-        UIFactory.Place(funcs.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(40, 110), new Vector2(620, 560), new Vector2(0f, 0.5f));
+        UIFactory.Place(funcs.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(40, -178), new Vector2(620, 560), new Vector2(0f, 1f));
         funcs.lineSpacing = 1.2f;
         var kb = UIFactory.Label(howToPanel.transform, "Keyboard", "沒有手把時（測試用）：WASD 移動 · 滑鼠視角 · Shift 奔跑 · Space 跳 · Ctrl/C 蹲 · E 互動 · Enter 確認 · Backspace 返回 · M 任務 · Tab 照片 · Esc 暫停",
                                  26, new Color(0.7f, 0.8f, 0.9f), TextAnchor.MiddleCenter);
-        UIFactory.Place(kb.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 250), new Vector2(1600, 80));
+        UIFactory.Place(kb.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 162), new Vector2(1600, 80));
         howToBackButton = UIFactory.MakeButton(howToPanel.transform, "Back", "OK", CloseHowTo, 34, 360f, 76f);
-        UIFactory.Place(howToBackButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 120), new Vector2(360, 76));
+        UIFactory.Place(howToBackButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 64), new Vector2(360, 76));
         howToPanel.SetActive(false);
     }
 

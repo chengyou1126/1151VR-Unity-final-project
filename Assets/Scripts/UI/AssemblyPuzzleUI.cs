@@ -35,7 +35,7 @@ public class AssemblyPuzzleUI : MonoBehaviour
 
     // 縮放
     float zoom = 1f;
-    int codeBase = 30, introBase = 26, questionBase = 32, optionBase = 30;
+    int codeBase = 48, introBase = 34, questionBase = 42, optionBase = 38;
     float optionHeightBase = 82f;
 
     AssemblyPuzzleManager mgr;
@@ -339,7 +339,7 @@ public class AssemblyPuzzleUI : MonoBehaviour
         for (int i = 0; i < 4; i++)
         {
             optionTexts[i].fontSize = Mathf.Max(8, Mathf.RoundToInt(optionBase * zoom));
-            optionLayouts[i].preferredHeight = Mathf.Max(40f, optionHeightBase * zoom);
+            optionLayouts[i].preferredHeight = Mathf.Max(optionHeightBase * zoom, optionTexts[i].preferredHeight + 16f);
         }
         confirmLayout.preferredHeight = Mathf.Max(44f, 70f * zoom);
         shutdownLayout.preferredHeight = Mathf.Max(60f, 110f * zoom);
@@ -463,17 +463,15 @@ public class AssemblyPuzzleUI : MonoBehaviour
         }
 
         var s = mgr.Current;
-        int lines = 1; foreach (char ch in s.code) if (ch == '\n') lines++;
 
         titleText.text = s.header + "     " + Stars(s.difficulty) + "   [" + AssemblyQuestions.ModuleNames[s.module] + "]";
         introText.text = s.intro;
         questionText.text = s.question;
         codeText.text = s.code;
 
-        // 預設縮放：長程式預設縮小以便一眼看到大部分，之後可自行放大再捲動
-        codeBase = 30; introBase = 26; questionBase = 32; optionBase = s.bigOptions ? 26 : 30;
-        optionHeightBase = s.bigOptions ? 116f : 82f;
-        zoom = lines > 24 ? 0.7f : 1f;
+        codeBase = 48; introBase = 34; questionBase = 42; optionBase = 38;
+        optionHeightBase = s.bigOptions ? 184f : 112f;
+        zoom = 1f;
 
         introText.gameObject.SetActive(true);
         questionText.gameObject.SetActive(true);
@@ -502,7 +500,7 @@ public class AssemblyPuzzleUI : MonoBehaviour
         for (int i = 0; i < 4; i++) optionButtons[i].gameObject.SetActive(false);
         confirmButton.gameObject.SetActive(false);
         shutdownButton.gameObject.SetActive(true);
-        zoom = 1f; codeBase = 30; introBase = 26; questionBase = 32;
+        zoom = 1f; codeBase = 48; introBase = 34; questionBase = 42;
         ApplyZoom();
         Log("所有系統模組已修復。", UIFactory.Green);
         UIManager.Instance.Focus(shutdownButton.gameObject);

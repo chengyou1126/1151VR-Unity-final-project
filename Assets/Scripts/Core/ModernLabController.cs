@@ -43,7 +43,7 @@ public class ModernLabController : MonoBehaviour
         while (!helpClosed) yield return null;
 
         if (gm.State == GameState.Playing && gm.Mode != InputMode.Gameplay) gm.SetMode(InputMode.Gameplay);
-        ui.Toast("用右類比搖桿瞄準物件，按 " + GameInput.InteractLabel + " 互動", 4f);
+        ui.Toast("瞄準物件後，按 " + GameInput.InteractLabel + " 互動", 4f);
     }
 
     IEnumerator AutoPuzzle(PhotoPuzzleManager pm)

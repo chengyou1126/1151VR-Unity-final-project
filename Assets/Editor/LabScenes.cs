@@ -187,7 +187,7 @@ public static partial class SceneBuilder
         var p0 = Need("起點", 24, 38);
         Vector3 pos;
         // 實驗桌（含另一半照片那張）
-        PlaceBench(env.transform, 6f, 40f, 90f, p0, out var photoBench);
+        PlaceBench(env.transform, 6f, 40f, 90f, p0, out pos);
         PlaceBench(env.transform, 14f, 30f, 0f, p0, out pos);
         PlaceBench(env.transform, 27f, 43f, 0f, p0, out var docBench1);
         PlaceBench(env.transform, 41f, 36f, 90f, p0, out var docBench2);
@@ -218,7 +218,8 @@ public static partial class SceneBuilder
         // 第二次烘焙：包含桌子、貨箱、碎片（守衛 / 驗證用）
         BakeNav(env.transform, null);
         AuditClearance("ModernLab", p0);
-        RequireGroundRouteNear("ModernLab 另一半照片", p0, photoBench);
+        var upperPhoto = new Vector3(15f, 3.26f, 19f);
+        RequirePhotoRoute(p0, upperPhoto);
         RequireGroundRouteNear("ModernLab 文件 1", p0, docBench1);
         RequireGroundRouteNear("ModernLab 文件 2", p0, docBench2);
         RequireGroundRouteNear("ModernLab 文件 3", p0, docBench3);
@@ -230,7 +231,7 @@ public static partial class SceneBuilder
         MakeDocument(items.transform, docBench3 + Vector3.up * 0.98f, "撕破的備忘錄", "「如果有人看到這個——事故前，有人把緊急停止系統的設定改掉了。真相在『過去』。」");
 
         // 另外半張照片
-        var half = Inst(photoPiecePrefab, items.transform, photoBench + Vector3.up * 1.15f);
+        var half = Inst(photoPiecePrefab, items.transform, upperPhoto);
         half.name = "PhotoHalf_Other";
         var pp = half.GetComponent<PhotoPickup>();
         pp.pieceId = 1;
@@ -243,7 +244,7 @@ public static partial class SceneBuilder
         gn.hintLines = new[]
         {
             "另外半張照片應該在西邊那間大廳——有很多圓柱槽的地方，找找看發光的東西。",
-            "走近後用右搖桿瞄準，按 A 拾取。找到之後會自動進入拼接。"
+            "靠近照片後瞄準它，按 E 拾取（手把按 A）。兩半收齊後會自動進入拼接。"
         };
 
         // 燈光：紅色警示燈 + 壞掉的日光燈
@@ -254,7 +255,7 @@ public static partial class SceneBuilder
         foreach (var s in new[] { (18f, 40f), (30f, 36f), (8f, 32f), (40f, 38f) })
             SmokeFx(items.transform, Need("smoke", s.Item1, s.Item2) + Vector3.up * 0.1f);
 
-        var start = Empty("PlayerStart", null, p0 + Vector3.up * 0.05f, 270f);
+        var start = Empty("PlayerStart", null, new Vector3(38f, 0.10000019f, 38f), 270f);
         Player(start.transform);
 
         AddManagers("LevelManager", SceneKind.ModernLab, start.transform, out var lm, out var level);
@@ -352,6 +353,12 @@ public static partial class SceneBuilder
             if (c.y > 1.2f) throw new Exception("[D-Day] " + what + "：最短路線要繞到上層天橋（y=" + c.y.ToString("F1") + " 於 " + c.x.ToString("F1") + "," + c.z.ToString("F1") + "），地面通道可能被擋住了");
     }
 
+    static void RequirePhotoRoute(Vector3 start, Vector3 pickup)
+    {
+        if (!NavMesh.SamplePosition(pickup, out var hit, 0.85f, NavMesh.AllAreas) || !Reach(start, hit.position))
+            throw new Exception("找不到前往照片碎片的路線：" + pickup);
+    }
+
     static void RequireGroundRouteNear(string what, Vector3 from, Vector3 center)
     {
         if (!ReachableNear(center, from, out var near)) throw new Exception("[D-Day] " + what + "：周圍走不到");
@@ -444,7 +451,9 @@ public static partial class SceneBuilder
         avoidRoom = true;
         BakeWithRoom(rr, env.transform, null);
 
-        var p0 = Need("起點（時空穿越位置）", 24, 38);
+        var p0 = Need("大廳導航基準點", 24, 38);
+        var arrival = Need("升降台東側穿越點", 38, 38, p0);
+        RequireGroundRoute("升降台東側穿越點", p0, arrival);
 
         // 實驗桌 + 四張照片碎片的位置（分散在不同區域）
         var pieceSpots = new[] { (5f, 41f), (6f, 24f), (44f, 43f), (45f, 33f) };
@@ -481,13 +490,14 @@ public static partial class SceneBuilder
 
         var items = Empty("Interactives", null);
         var it = items.transform;
-        Inst(portalPrefab, it, p0);
+        Inst(portalPrefab, it, arrival);
 
         // 四塊碎片
+        var pickupPositions = new[] { new Vector3(10.65f, 3.84f, 6.55f), new Vector3(30f, 3.25f, 49f), pieceBase[2] + Vector3.up * 1.15f, new Vector3(68f, 0.75f, 35f) };
         var pieces = new List<GameObject>();
         for (int i = 0; i < 4; i++)
         {
-            var go = Inst(photoPiecePrefab, it, pieceBase[i] + Vector3.up * 1.15f);
+            var go = Inst(photoPiecePrefab, it, pickupPositions[i]);
             go.name = "PhotoPiece_0" + (i + 1);
             var pp = go.GetComponent<PhotoPickup>();
             pp.pieceId = i;
@@ -547,7 +557,15 @@ public static partial class SceneBuilder
         AuditClearance("PastLab", p0);
         for (int i = 0; i < 4; i++)
         {
-            RequireGroundRouteNear("PastLab 照片碎片 " + (i + 1), p0, pieceBase[i]);
+            if (i == 0)
+                RequirePhotoRoute(new Vector3(13f, 3.05f, 12f), new Vector3(11.5f, 3.05f, 6.55f)); // 診療桌旁的拾取站位
+            else if (i == 2) RequireGroundRouteNear("PastLab 照片碎片 3", p0, pieceBase[i]);
+            else if (i == 3)
+            {
+                // 東翼門檻把兩區導航網格分開；從東翼室內檢查碎片的拾取路線。
+                RequirePhotoRoute(new Vector3(58f, 0.55f, 40f), pickupPositions[i]);
+            }
+            else RequirePhotoRoute(p0, pickupPositions[i]);
             RequireGroundRouteNear("PastLab 相框 " + (i + 1) + " 支架", p0, new Vector3(plan.center[i].x, 0f, plan.center[i].z));
         }
         RequireGroundRoute("PastLab ViewFinder 視角", p0, Snap(plan.viewer.x, plan.viewer.z, 0.8f) ?? plan.viewer);
@@ -574,7 +592,7 @@ public static partial class SceneBuilder
         var start4 = rr.exitSpot;
 
         // 第四關終點：最初穿越位置
-        var escapeZone = MakeZone("EscapeZone", it, p0 + Vector3.up * 1.2f, new Vector3(3.4f, 2.4f, 3.4f));
+        var escapeZone = MakeZone("EscapeZone", it, arrival + Vector3.up * 1.2f, new Vector3(3.4f, 2.4f, 3.4f));
 
         // 第四關警報燈
         var alarms = new List<AlarmLight>();
@@ -621,7 +639,14 @@ public static partial class SceneBuilder
         if (g4Pos.Count < 3) throw new Exception("[D-Day] 找不到三個離第四關起點 / 終點夠遠的守衛出生點");
         for (int i = 0; i < 3; i++)
         {
-            var g = Inst(guardPrefab, guardsRoot.transform, g4Pos[i], 90f * i);
+            var spawn = g4Pos[i];
+            if (spawn.x < 18f)
+            {
+                if (!NavMesh.SamplePosition(new Vector3(34f, 3.05f, 49f), out var upper, 1f, NavMesh.AllAreas) || !Reach(p0, upper.position))
+                    throw new Exception("第四關北側守衛出生點走不到");
+                spawn = upper.position;
+            }
+            var g = Inst(guardPrefab, guardsRoot.transform, spawn, 90f * i);
             g.name = "Guard_Stage4_" + (i + 1);
             var ai = g.GetComponent<GuardAI>();
             ai.startInChase = true; ai.alwaysKnowsPlayer = true; ai.chaseSpeed = 4.4f; ai.chaseStartDelay = 4f;
@@ -630,7 +655,7 @@ public static partial class SceneBuilder
         }
 
         // 玩家
-        var start = Empty("PlayerStart", null, p0 + Vector3.up * 0.05f, 270f);
+        var start = Empty("PlayerStart", null, arrival + Vector3.up * 0.05f, 270f);
         Player(start.transform);
 
         AddManagers("LevelManager", SceneKind.PastLab, start.transform, out var lm, out var level);

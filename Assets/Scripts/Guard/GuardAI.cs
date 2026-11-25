@@ -66,6 +66,17 @@ public class GuardAI : MonoBehaviour
         if (player == null) return;
 
         Vector3 pPos = player.transform.position;
+        // 第四關讓玩家先離開西側相框室，再開始追逐；重生時也適用。
+        if (alwaysKnowsPlayer && LevelManager.Current != null && LevelManager.Current.Stage == 4)
+        {
+            bool inFrameRoom = pPos.x < 18f && pPos.z >= 16f && pPos.z <= 45f;
+            agent.isStopped = inFrameRoom;
+            if (inFrameRoom)
+            {
+                if (agent.hasPath) agent.ResetPath();
+                return;
+            }
+        }
         bool sees = CanSee(pPos);
         if (sees) lastKnown = pPos;
 
