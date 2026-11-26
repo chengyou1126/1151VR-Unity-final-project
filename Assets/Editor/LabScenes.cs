@@ -239,7 +239,7 @@ public static partial class SceneBuilder
 
         // Guide
         var gpos = Need("Guide", 21.5f, 36f, p0);
-        var guide = Inst(guidePrefab, items.transform, gpos, 250f);
+        var guide = Inst(guidePrefab, items.transform, gpos, Mathf.Atan2(32f - gpos.x, 38f - gpos.z) * Mathf.Rad2Deg);
         var gn = guide.GetComponent<GuideNPC>();
         gn.hintLines = new[]
         {
@@ -261,6 +261,10 @@ public static partial class SceneBuilder
         AddManagers("LevelManager", SceneKind.ModernLab, start.transform, out var lm, out var level);
         var ctrl = level.AddComponent<ModernLabController>();
         ctrl.guide = gn;
+        ctrl.laboratory = lab.transform;
+        const string finishes = "Assets/Models/Environment/UndergroundLab/Materials/";
+        ctrl.modernFinish = AssetDatabase.LoadAssetAtPath<Material>(finishes + "Lab_Modern.mat");
+        ctrl.restoredFinish = AssetDatabase.LoadAssetAtPath<Material>(finishes + "Lab_Past.mat");
         level.AddComponent<PhotoPuzzleManager>();
 
         Report("ModernLab");
@@ -592,7 +596,7 @@ public static partial class SceneBuilder
         var start4 = rr.exitSpot;
 
         // 第四關終點：最初穿越位置
-        var escapeZone = MakeZone("EscapeZone", it, arrival + Vector3.up * 1.2f, new Vector3(3.4f, 2.4f, 3.4f));
+        var escapeZone = MakeZone("EscapeZone", it, arrival + Vector3.up * 1.2f, new Vector3(5f, 4f, 5f));
 
         // 第四關警報燈
         var alarms = new List<AlarmLight>();
@@ -624,32 +628,21 @@ public static partial class SceneBuilder
         g2.GetComponent<GuardAI>().patrolPoints = patrolTf;
 
         var g4 = new List<GameObject>();
-        // 第四關三名守衛：離「密室門外（第四關起點，≥14 m）」和「時空穿越位置（終點，≥12 m）」都要夠遠，彼此也要分散
-        var g4Pos = new List<Vector3>();
-        float Flat(Vector3 a, Vector3 b) { return Vector2.Distance(new Vector2(a.x, a.z), new Vector2(b.x, b.z)); }
-        foreach (var c in new[] { (45f, 43f), (8f, 24f), (36f, 36f), (41f, 36f), (36f, 41f), (4f, 22f), (12f, 22f), (46f, 38f), (45f, 34f) })
+        var posts = new[] { (45f, 43f), (34f, 49f), (36f, 36f) };
+        for (int i = 0; i < posts.Length; i++)
         {
-            if (g4Pos.Count == 3) break;
-            var sp = Snap(c.Item1, c.Item2, 1.0f);
-            if (!sp.HasValue || !Reach(p0, sp.Value)) { Debug.Log("[D-Day] 守衛候選 " + c + " 不在導航網格上 / 走不到"); continue; }
-            if (Flat(sp.Value, p0) < 12f || Flat(sp.Value, start4.position) < 14f) { Debug.Log("[D-Day] 守衛候選 " + c + " 離起點或終點太近（終點 " + Flat(sp.Value, p0).ToString("F1") + "，起點 " + Flat(sp.Value, start4.position).ToString("F1") + "）"); continue; }
-            if (g4Pos.Any(q => Flat(q, sp.Value) < 10f)) { Debug.Log("[D-Day] 守衛候選 " + c + " 離其他守衛太近"); continue; }
-            g4Pos.Add(sp.Value);
-        }
-        if (g4Pos.Count < 3) throw new Exception("[D-Day] 找不到三個離第四關起點 / 終點夠遠的守衛出生點");
-        for (int i = 0; i < 3; i++)
-        {
-            var spawn = g4Pos[i];
-            if (spawn.x < 18f)
+            Vector3 spawn;
+            if (i == 1)
             {
-                if (!NavMesh.SamplePosition(new Vector3(34f, 3.05f, 49f), out var upper, 1f, NavMesh.AllAreas) || !Reach(p0, upper.position))
-                    throw new Exception("第四關北側守衛出生點走不到");
+                if (!NavMesh.SamplePosition(new Vector3(posts[i].Item1, 3.05f, posts[i].Item2), out var upper, 0.8f, NavMesh.AllAreas) || !Reach(p0, upper.position))
+                    throw new Exception("找不到可通行的二樓守衛站位");
                 spawn = upper.position;
             }
+            else spawn = Need("第四關一樓守衛", posts[i].Item1, posts[i].Item2, p0);
             var g = Inst(guardPrefab, guardsRoot.transform, spawn, 90f * i);
             g.name = "Guard_Stage4_" + (i + 1);
             var ai = g.GetComponent<GuardAI>();
-            ai.startInChase = true; ai.alwaysKnowsPlayer = true; ai.chaseSpeed = 4.4f; ai.chaseStartDelay = 4f;
+            ai.startInChase = true; ai.alwaysKnowsPlayer = true; ai.chaseSpeed = 4.4f;
             g.SetActive(false);
             g4.Add(g);
         }

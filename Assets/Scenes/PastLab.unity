@@ -295,7 +295,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.4, y: 2.4, z: 3.4}
+  m_Size: {x: 5, y: 4, z: 5}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &7211979
 MonoBehaviour:
@@ -12859,10 +12859,6 @@ PrefabInstance:
     - target: {fileID: 7102373999695558516, guid: cdaaeaf4641bd4d4aa3154e8f7110608, type: 3}
       propertyPath: startInChase
       value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7102373999695558516, guid: cdaaeaf4641bd4d4aa3154e8f7110608, type: 3}
-      propertyPath: chaseStartDelay
-      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 7102373999695558516, guid: cdaaeaf4641bd4d4aa3154e8f7110608, type: 3}
       propertyPath: alwaysKnowsPlayer

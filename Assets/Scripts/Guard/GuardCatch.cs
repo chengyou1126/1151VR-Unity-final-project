@@ -16,7 +16,7 @@ public class GuardCatch : MonoBehaviour
     void Update()
     {
         var gm = GameManager.Instance;
-        if (gm.State != GameState.Playing || gm.Mode != InputMode.Gameplay) return;
+        if (!ai.CanCatch || gm.State != GameState.Playing || gm.Mode != InputMode.Gameplay) return;
 
         var player = PlayerCheckpoint.Instance;
         if (player == null || player.IsInvulnerable || LevelManager.Current == null) return;

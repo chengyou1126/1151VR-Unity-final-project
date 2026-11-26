@@ -59,6 +59,25 @@ public class HiddenRoom : MonoBehaviour
     }
 
     /// <summary>玩家不能被關在房間的牆裡：如果剛好站在房間範圍內，先送到門外。</summary>
+    public void ShowExterior()
+    {
+        // Shell 的直接子物件中，六片碰撞牆各自帶有實心牆材質。
+        var shell = body.transform.Find("Shell");
+        Material wallMaterial = null;
+        foreach (Transform part in shell)
+        {
+            if (!part.TryGetComponent<BoxCollider>(out _) || !part.TryGetComponent<MeshRenderer>(out var wall)) continue;
+            wall.enabled = true;
+            wallMaterial = wall.sharedMaterial;
+        }
+        var roof = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        roof.name = "ExteriorRoof";
+        roof.transform.SetParent(shell, false);
+        roof.transform.localPosition = new Vector3(0f, 4.13f, 5.25f);
+        roof.transform.localScale = new Vector3(10.8f, 0.14f, 10.8f);
+        if (wallMaterial != null) roof.GetComponent<MeshRenderer>().sharedMaterial = wallMaterial;
+    }
+
     void EvictPlayer()
     {
         var cp = PlayerCheckpoint.Instance;

@@ -423,9 +423,17 @@ public static class SmokeTest
         yield return Seconds(2f);
         var g4 = UnityEngine.Object.FindObjectsByType<GuardAI>(FindObjectsSortMode.None).Where(g => g.gameObject.activeInHierarchy).ToList();
         Check(g4.Count == 3, "stage 4 has 3 active guards (found " + g4.Count + ")");
-        yield return Seconds(6f);
-        Check(g4.Count == 3 && g4.All(g => g.State == GuardState.Chase || GM.Data.lives < 3), "all 3 guards chasing after the delay");
-        Check(Vector3.Distance(LevelManager.Current.playerStartStage4.position, PlayerCheckpoint.Instance.transform.position) < 40f, "player alive in stage 4");
+        var downstairs = g4.Where(g => g.transform.position.y < 1f).ToArray();
+        Check(downstairs.Length == 2 && Vector3.Distance(downstairs[0].transform.position, downstairs[1].transform.position) > 10f, "ground-floor guards are separated");
+        Check(g4.Count(g => g.transform.position.y > 2.5f) == 1, "one upstairs guard");
+        Check(Physics.Linecast(new Vector3(17f, 1f, 38.6f), new Vector3(18.3f, 1f, 38.6f), out var doorHit)
+            && doorHit.collider.name == "GroundFloorPassageDoor", "ground-floor passage closed");
+        TeleportPlayer(new Vector3(12f, 0.1f, 28f));
+        yield return Seconds(0.2f);
+        Check(g4.Count(g => g.State == GuardState.Chase) == 0, "guards wait outside the frame room");
+        TeleportPlayer(new Vector3(42f, 0.1f, 38f));
+        yield return Seconds(0.2f);
+        Check(g4.Count(g => g.State == GuardState.Chase) == 3, "all guards chase in the destination room");
         Shot("14_pastlab_stage4");
 
         // 抵達最初穿越位置 → 通關
@@ -433,7 +441,9 @@ public static class SmokeTest
         var escape = UnityEngine.Object.FindObjectsByType<ProximityZone>(FindObjectsSortMode.None).First(z => z.name == "EscapeZone");
         Check(escape.zoneActive, "escape zone active in stage 4");
         TeleportPlayer(escape.transform.position - Vector3.up * 1.15f);
-        yield return Until(() => GM.State == GameState.GameClear, 15, "Game Clear after reaching the escape point");
+        yield return WaitScene(SceneKind.ModernLab, 60);
+        Check(GM.Data.returningToGuide && GM.State == GameState.Playing, "guide epilogue before results");
+        yield return Until(() => GM.State == GameState.GameClear, 20, "Game Clear after guide dialogue");
 
         // ── 生命歸零 → Game Over → 重新開始 ──
         GM.StartNewGame();

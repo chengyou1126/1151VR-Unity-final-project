@@ -22,6 +22,8 @@ public class GuardAI : MonoBehaviour
     public bool alwaysKnowsPlayer;
     [Tooltip("true = 一開始就追逐（第四關）")]
     public bool startInChase;
+    bool waitingForRoom;
+    public bool CanCatch => !waitingForRoom;
     public float chaseStartDelay = 3f;
 
     [Header("感知")]
@@ -66,16 +68,12 @@ public class GuardAI : MonoBehaviour
         if (player == null) return;
 
         Vector3 pPos = player.transform.position;
-        // 第四關讓玩家先離開西側相框室，再開始追逐；重生時也適用。
-        if (alwaysKnowsPlayer && LevelManager.Current != null && LevelManager.Current.Stage == 4)
+        if (waitingForRoom)
         {
-            bool inFrameRoom = pPos.x < 18f && pPos.z >= 16f && pPos.z <= 45f;
-            agent.isStopped = inFrameRoom;
-            if (inFrameRoom)
-            {
-                if (agent.hasPath) agent.ResetPath();
-                return;
-            }
+            bool entered = pPos.x >= 32f && pPos.x <= 50f && pPos.z >= 30f && pPos.z <= 51f;
+            if (!entered) return;
+            waitingForRoom = false;
+            BeginChase(0f);
         }
         bool sees = CanSee(pPos);
         if (sees) lastKnown = pPos;
@@ -113,7 +111,7 @@ public class GuardAI : MonoBehaviour
         agent.acceleration = 14f;
         initialized = true;
 
-        if (startInChase) BeginChase(chaseStartDelay); else EnterPatrol();
+        ResetBehaviour();
     }
 
     public void ResetToStart()
@@ -122,7 +120,19 @@ public class GuardAI : MonoBehaviour
         agent.Warp(startPosition);
         transform.rotation = startRotation;
         patrolIndex = 0;
-        if (startInChase) BeginChase(chaseStartDelay); else EnterPatrol();
+        ResetBehaviour();
+    }
+
+    void ResetBehaviour()
+    {
+        waitingForRoom = startInChase && alwaysKnowsPlayer;
+        if (waitingForRoom)
+        {
+            agent.ResetPath();
+            State = GuardState.Alert;
+        }
+        else if (startInChase) BeginChase(chaseStartDelay);
+        else EnterPatrol();
     }
 
     public void BeginChase(float delay)

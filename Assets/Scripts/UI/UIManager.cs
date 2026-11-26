@@ -225,11 +225,22 @@ public class UIManager : MonoBehaviour
         gameOverPanel.GetComponent<Image>().color = new Color(0.12f, 0.01f, 0.01f, 0.93f);
 
         // Game Clear
-        clearPanel = MakeMenu("GameClear", "MISSION COMPLETE", "成功阻止實驗室事故", out col);
-        clearLivesText = UIFactory.Label(col, "Lives", "", 44, new Color(1f, 0.9f, 0.45f), TextAnchor.MiddleCenter);
-        clearLivesText.rectTransform.sizeDelta = new Vector2(560, 80);
-        clearMenuButton = UIFactory.MakeButton(col, "Menu", "Main Menu", () => { clearPanel.SetActive(false); GameManager.Instance.ReturnToMainMenu(); });
-
+        clearPanel = UIFactory.Panel(Root, "GameClear", new Color(0.025f, 0.055f, 0.09f, 0.91f)).gameObject;
+        UIFactory.Place(clearPanel.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
+            new Vector2(0, 32), new Vector2(740, 310));
+        var resultLayout = clearPanel.AddComponent<VerticalLayoutGroup>();
+        resultLayout.childAlignment = TextAnchor.MiddleCenter;
+        resultLayout.spacing = 8;
+        resultLayout.childControlWidth = resultLayout.childControlHeight = false;
+        resultLayout.childForceExpandWidth = resultLayout.childForceExpandHeight = false;
+        var title = UIFactory.Label(clearPanel.transform, "Title", "任務完成", 58, Color.white, TextAnchor.MiddleCenter);
+        title.rectTransform.sizeDelta = new Vector2(700, 82);
+        var subtitle = UIFactory.Label(clearPanel.transform, "Subtitle", "成功阻止實驗室事故", 32, UIFactory.Cyan, TextAnchor.MiddleCenter);
+        subtitle.rectTransform.sizeDelta = new Vector2(700, 48);
+        clearLivesText = UIFactory.Label(clearPanel.transform, "Lives", "", 30, Color.white, TextAnchor.MiddleCenter);
+        clearLivesText.rectTransform.sizeDelta = new Vector2(700, 46);
+        clearMenuButton = UIFactory.MakeButton(clearPanel.transform, "Menu", "返回主選單", () => { clearPanel.SetActive(false); GameManager.Instance.ReturnToMainMenu(); }, 30, 320, 64);
+        clearPanel.SetActive(false);
         // 手把斷線
         controllerPanel = MakeMenu("ControllerOverlay", "Controller Disconnected", "", out col, 760f);
         controllerPanel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.93f);
@@ -343,7 +354,7 @@ public class UIManager : MonoBehaviour
         else if (s == GameState.GameClear)
         {
             CloseAllInfo();
-            clearLivesText.text = "Remaining Lives: " + GameManager.Instance.Data.lives + " / " + GameManager.MaxLives;
+            clearLivesText.text = "剩餘生命　" + GameManager.Instance.Data.lives + " / " + GameManager.MaxLives;
             Focus(clearMenuButton.gameObject);
         }
         else ClearSelection();
@@ -465,17 +476,18 @@ public class UIManager : MonoBehaviour
     public void Say(string speaker, string[] lines, Action done = null)
     {
         if (dialogueCo != null) StopCoroutine(dialogueCo);
-        dialogueCo = StartCoroutine(DialogueRoutine(speaker, lines, done));
+        dialogueCo = StartCoroutine(DialogueRoutine(speaker, lines, done, 0f));
     }
 
-    public IEnumerator SayRoutine(string speaker, string[] lines)
+    public IEnumerator SayRoutine(string speaker, string[] lines, float autoAdvanceSeconds = 0f)
     {
         bool finished = false;
-        Say(speaker, lines, () => finished = true);
+        if (dialogueCo != null) StopCoroutine(dialogueCo);
+        dialogueCo = StartCoroutine(DialogueRoutine(speaker, lines, () => finished = true, autoAdvanceSeconds));
         while (!finished) yield return null;
     }
 
-    IEnumerator DialogueRoutine(string speaker, string[] lines, Action done)
+    IEnumerator DialogueRoutine(string speaker, string[] lines, Action done, float autoAdvanceSeconds)
     {
         var gm = GameManager.Instance;
         var prevMode = gm.Mode;
@@ -500,7 +512,8 @@ public class UIManager : MonoBehaviour
             dialogueText.text = line;
             dialogueHint.text = "[" + GameInput.ConfirmLabel + "] 繼續";
             yield return null;
-            while (!GameInput.UISubmit.WasPressedThisFrame()) yield return null;
+            float until = autoAdvanceSeconds > 0f ? Time.unscaledTime + autoAdvanceSeconds : float.PositiveInfinity;
+            while (!GameInput.UISubmit.WasPressedThisFrame() && Time.unscaledTime < until) yield return null;
         }
 
         dialoguePanel.SetActive(false);

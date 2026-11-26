@@ -29,6 +29,7 @@ public class PastLabController : MonoBehaviour
         foreach (var go in stage2Only) if (go != null) go.SetActive(true);
         foreach (var go in stage4Only) if (go != null) go.SetActive(false);
         escapeZone.zoneActive = false;
+        escapeZone.fireOnce = false;
         room.exitZone.zoneActive = false;
         room.insideZone.zoneActive = false;
         foreach (var a in stage4Alarms) a.SetRunning(false);
@@ -73,7 +74,7 @@ public class PastLabController : MonoBehaviour
         room.insideZone.OnPlayerEnter += () => { if (!stage3Started) StartCoroutine(Stage3Routine()); };
         room.console.OnUse += OpenConsole;
         room.exitZone.OnPlayerEnter += () => { if (!stage4Started) BeginStage4(); };
-        escapeZone.OnPlayerEnter += () => { if (stage4Started && !ending) StartCoroutine(EndingRoutine()); };
+        escapeZone.OnPlayerEnter += () => { if (stage4Started && !ending) ReturnToGuide(); };
 
         yield return lm.BeginLevel(true, Color.white);
         ui.Toast("你回到了事故發生之前的實驗室。小心守衛。", 4f);
@@ -166,12 +167,26 @@ public class PastLabController : MonoBehaviour
         var lm = LevelManager.Current;
         var ui = UIManager.Instance;
 
+        // 坦克室和大廳之間的一樓門，二樓通道保持暢通。
+        var door = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        door.name = "GroundFloorPassageDoor";
+        door.transform.SetParent(transform, true);
+        door.transform.position = new Vector3(17.63f, 1.4f, 38.6f);
+        door.transform.localScale = new Vector3(0.28f, 2.8f, 3.8f);
+        var panel = room.door.panel.GetComponentInChildren<MeshRenderer>(true);
+        if (panel != null) door.GetComponent<MeshRenderer>().sharedMaterial = panel.sharedMaterial;
+        var obstacle = door.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+        obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+        obstacle.size = Vector3.one;
+        obstacle.carving = true;
+
+        room.ShowExterior();
         lm.SetStage(4);
         AudioManager.SetMusic("PastLab");
         foreach (var go in stage4Only) if (go != null) go.SetActive(true);
         foreach (var a in stage4Alarms) a.SetRunning(true);
         ui.SetPhotoProgress(0, 0);
-        ui.SetMission("躲避守衛，回到升降台東側的時空穿越點");
+        ui.SetMission("一樓通道已關閉，請經二樓回到升降台東側的時空穿越點");
 
         // 被抓到時從密室門外重新開始
         var cp = PlayerCheckpoint.Instance;
@@ -182,16 +197,13 @@ public class PastLabController : MonoBehaviour
         ui.Toast("自毀程序已解除——但守衛開始追捕你！按住 RB 奔跑！", 4.5f);
     }
 
-    IEnumerator EndingRoutine()
+    void ReturnToGuide()
     {
         ending = true;
-        var gm = GameManager.Instance;
-        var ui = UIManager.Instance;
-        gm.SetMode(InputMode.Locked);
+        escapeZone.zoneActive = false;
+        UIManager.Instance.SetHudVisible(false);
         AudioManager.Play(Sfx.TimeTravel);
-        yield return ui.FadeRoutine(1f, 1.4f, Color.white);
-        ui.SetHudVisible(false);
-        gm.TriggerGameClear();
-        yield return ui.FadeRoutine(0f, 1.2f, Color.white);
+        GameManager.Instance.Data.returningToGuide = true;
+        SceneLoader.Load(GameManager.SceneNameForStage(1), Color.white);
     }
 }

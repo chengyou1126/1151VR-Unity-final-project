@@ -11,6 +11,7 @@ public enum InputMode { Gameplay, UI, Puzzle, Locked }
 [Serializable]
 public class RunData
 {
+    public bool returningToGuide;
     public int lives = GameManager.MaxLives;
     public int stage = 1;                         // 1~4
     public bool[] photoPieces = new bool[4];      // 第一關用 [0..1]，第二關用 [0..3]
@@ -105,7 +106,9 @@ public class GameManager : MonoBehaviour
             case SceneKind.MainMenu:
                 SetState(GameState.MainMenu);
                 return 0;
-            case SceneKind.ModernLab: Data.stage = 1; break;
+            case SceneKind.ModernLab:
+                if (!Data.returningToGuide) Data.stage = 1;
+                break;
             case SceneKind.PastLab: Data.stage = 2; break;   // 進場一定從第二關開始；三、四關由 PastLabController 在場景內推進
         }
         if (State == GameState.MainMenu) SetState(GameState.Playing); // 直接從編輯器開某個場景測試
