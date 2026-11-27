@@ -22,7 +22,7 @@ public static class TimeTravelEffect
         AudioManager.Play(Sfx.TimeTravel);
         ui.SetPrompt(null);
 
-        var layer = UIFactory.NewRect("TimeTravelFX", ui.Root);
+        var layer = UIFactory.NewRect("TimeTravelFX", ui.Canvas.transform);
         UIFactory.Stretch(layer);
 
         // 接縫

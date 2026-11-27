@@ -5,14 +5,28 @@ using UnityEngine.SceneManagement;
 
 public enum Sfx { Click, Pickup, Success, Error, Caught, Alarm, Door, Footstep, TimeTravel, GameOver, GameClear, Panel }
 
-/// <summary>
-/// 音效管理。目前沒有正式音檔，所以音效與背景音樂都是程式即時合成的「替代音」。
-/// 要換成正式音檔：把檔案放進 Assets/Resources/Audio/，檔名與 Sfx 名稱相同（例如 Pickup.wav），
-/// 背景音樂檔名用 BGM_場景名（例如 BGM_PastLab.mp3），就會自動取代。
-/// </summary>
+/// <summary>播放關卡配樂與音效，警示響起時降低配樂音量。</summary>
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
+
+    const float MusicVolume = 0.50f;
+    const float WarningMusicVolume = 0.10f;
+    // 各關配樂倍率：1f 維持原音量，0.8f 播放八成，1.2f 播放一點二倍。
+    const float Stage1Gain = 1f;  // Dark Fog
+    const float Stage2Gain = 1f;  // Crypto
+    const float Stage3Gain = 1f;  // 密室
+    const float Stage4_1Gain = 1f;  // Volatile Reaction（逃脫）
+    const float Stage4_2Gain = 1f;  // Reunited（回到現代）
+
+    float trackGain = 1f;
+    float mixVolume = MusicVolume;
+    float duckUntil;
+
+    void ApplyMusicVolume()
+    {
+        musicSource.volume = Mathf.Clamp01(mixVolume * trackGain);
+    }
 
     AudioSource sfxSource;
     AudioSource musicSource;
@@ -32,7 +46,7 @@ public class AudioManager : MonoBehaviour
         musicSource = gameObject.AddComponent<AudioSource>();
         musicSource.spatialBlend = 0f;
         musicSource.loop = true;
-        musicSource.volume = 0.3f;
+        ApplyMusicVolume();
 
         foreach (Sfx id in Enum.GetValues(typeof(Sfx)))
         {
@@ -50,15 +64,33 @@ public class AudioManager : MonoBehaviour
 
     void PlayOne(Sfx id, float volume)
     {
-        if (clips.TryGetValue(id, out var c) && c != null) sfxSource.PlayOneShot(c, volume);
+        if (!clips.TryGetValue(id, out var c) || c == null) return;
+        if (id == Sfx.Alarm || id == Sfx.Caught || id == Sfx.Error || id == Sfx.GameOver)
+        {
+            mixVolume = Mathf.Min(MusicVolume, WarningMusicVolume);
+            ApplyMusicVolume();
+            duckUntil = Mathf.Max(duckUntil, Time.unscaledTime + c.length);
+        }
+        if (id == Sfx.Footstep) volume *= 0.25f;
+        sfxSource.PlayOneShot(c, volume);
+    }
+
+    void Update()
+    {
+        if (Time.unscaledTime >= duckUntil && mixVolume < MusicVolume)
+        {
+            mixVolume = Mathf.MoveTowards(mixVolume, MusicVolume, (MusicVolume - WarningMusicVolume) / 0.75f * Time.unscaledDeltaTime);
+            ApplyMusicVolume();
+        }
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        ApplyTrack(scene.name);
+        bool returning = scene.name == "ModernLab" && GameManager.Instance.Data.returningToGuide;
+        ApplyTrack(returning ? "ReturnToGuide" : scene.name);
     }
 
-    /// <summary>換背景音樂（同一個場景裡進入隱藏密室時用："SecretRoom"；回到實驗室用 "PastLab"）。</summary>
+    /// <summary>在同一個場景內切換關卡配樂。</summary>
     public static void SetMusic(string track)
     {
         if (Instance != null) Instance.ApplyTrack(track);
@@ -66,6 +98,16 @@ public class AudioManager : MonoBehaviour
 
     void ApplyTrack(string track)
     {
+        switch (track)
+        {
+            case "ModernLab": trackGain = Stage1Gain; break;
+            case "PastLab": trackGain = Stage2Gain; break;
+            case "SecretRoom": trackGain = Stage3Gain; break;
+            case "Escape": trackGain = Stage4_1Gain; break;
+            case "ReturnToGuide": trackGain = Stage4_2Gain; break;
+            default: trackGain = 1f; break;
+        }
+        ApplyMusicVolume();
         var custom = Resources.Load<AudioClip>("Audio/BGM_" + track);
         AudioClip clip = custom;
         if (clip == null)
@@ -85,7 +127,6 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    // ───────────── 程式合成 ─────────────
 
     AudioClip Generate(Sfx id)
     {
@@ -100,7 +141,7 @@ public class AudioManager : MonoBehaviour
             case Sfx.Alarm: return Siren("alarm", 1.6f, 0.45f);
             case Sfx.Door: return Noise("door", 0.35f, 0.5f, 0.0045f);
             case Sfx.Footstep: return Noise("step", 0.09f, 0.5f, 0.02f);
-            case Sfx.TimeTravel: return Chirp("travel", 120f, 1800f, 3f, 0.55f);
+            case Sfx.TimeTravel: return Chirp("travel", 120f, 1800f, 3f, 0.45f);
             case Sfx.GameOver: return Chirp("gameover", 440f, 70f, 1.6f, 0.6f, square: true);
             case Sfx.GameClear: return Two("clear", 523f, 784f, 1.2f, 0.5f);
             default: return Chirp("default", 440f, 440f, 0.1f, 0.3f);

@@ -82,6 +82,7 @@ public static class UIFactory
         var t = rt.gameObject.AddComponent<Text>();
         t.font = mono ? Mono : Font;
         t.fontSize = size;
+        t.lineSpacing = 1.3f;
         t.color = color;
         t.alignment = anchor;
         t.text = text;

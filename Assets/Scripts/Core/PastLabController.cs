@@ -182,7 +182,7 @@ public class PastLabController : MonoBehaviour
 
         room.ShowExterior();
         lm.SetStage(4);
-        AudioManager.SetMusic("PastLab");
+        AudioManager.SetMusic("Escape");
         foreach (var go in stage4Only) if (go != null) go.SetActive(true);
         foreach (var a in stage4Alarms) a.SetRunning(true);
         ui.SetPhotoProgress(0, 0);

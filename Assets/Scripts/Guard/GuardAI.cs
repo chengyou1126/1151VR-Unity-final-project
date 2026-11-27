@@ -187,7 +187,7 @@ public class GuardAI : MonoBehaviour
         State = GuardState.Alert;
         timer = alertTime;
         agent.ResetPath();
-        AudioManager.Play(Sfx.Alarm, 0.5f);
+        AudioManager.Play(Sfx.Alarm, 0.35f);
     }
 
     void UpdateAlert()

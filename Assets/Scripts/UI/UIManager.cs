@@ -14,7 +14,7 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance { get; private set; }
 
     public Canvas Canvas { get; private set; }
-    public RectTransform Root => (RectTransform)Canvas.transform;
+    public RectTransform Root { get; private set; }
     public PhotoPuzzleController PhotoPuzzle { get; private set; }
     public AssemblyPuzzleUI Assembly { get; private set; }
 
@@ -88,8 +88,11 @@ public class UIManager : MonoBehaviour
         Canvas.sortingOrder = 100;
         var scaler = go.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.matchWidthOrHeight = 0.5f;
+        scaler.referenceResolution = new Vector2(2048, 1152);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+        // Keep at least 1920 x 1080 layout units inside the screen margins.
+        Root = UIFactory.NewRect("UIContent", Canvas.transform);
+        UIFactory.Stretch(Root, 64, 36, 64, 36);
         go.AddComponent<GraphicRaycaster>();
     }
 
@@ -153,14 +156,14 @@ public class UIManager : MonoBehaviour
     void BuildDialogue()
     {
         var bg = UIFactory.Panel(Root, "Dialogue", new Color(0.03f, 0.05f, 0.08f, 0.92f));
-        UIFactory.Place(bg.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 70), new Vector2(1500, 260));
+        UIFactory.Place(bg.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 70), new Vector2(1500, 330));
         dialoguePanel = bg.gameObject;
 
         speakerText = UIFactory.Label(dialoguePanel.transform, "Speaker", "", 36, UIFactory.Cyan);
         UIFactory.Place(speakerText.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(36, -22), new Vector2(900, 50), new Vector2(0, 1));
 
         dialogueText = UIFactory.Label(dialoguePanel.transform, "Text", "", 36, Color.white);
-        UIFactory.Place(dialogueText.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(36, -80), new Vector2(1428, 130), new Vector2(0, 1));
+        UIFactory.Place(dialogueText.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(36, -80), new Vector2(1428, 185), new Vector2(0, 1));
 
         dialogueHint = UIFactory.Label(dialoguePanel.transform, "Hint", "", 28, new Color(0.7f, 0.8f, 0.9f), TextAnchor.LowerRight);
         UIFactory.Place(dialogueHint.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-30, 14), new Vector2(400, 40), new Vector2(1, 0));
@@ -252,15 +255,21 @@ public class UIManager : MonoBehaviour
         UIFactory.Stretch(howToPanel.GetComponent<RectTransform>());
         var ht = UIFactory.Label(howToPanel.transform, "Title", "How to Play  操作說明", 64, Color.white, TextAnchor.MiddleCenter);
         UIFactory.Place(ht.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -56), new Vector2(1400, 84), new Vector2(0.5f, 1f));
-        var keys = UIFactory.Label(howToPanel.transform, "Keys", "左類比搖桿\n右類比搖桿\nRB\nLB\nB\nA\nX\nY\nStart\n方向鍵 / 左搖桿", 34, UIFactory.Cyan, TextAnchor.UpperRight);
-        UIFactory.Place(keys.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-40, -178), new Vector2(520, 560), new Vector2(1f, 1f));
-        keys.lineSpacing = 1.2f;
-        var funcs = UIFactory.Label(howToPanel.transform, "Funcs", "移動\n視角\n奔跑（按住）\n跳躍\n蹲下（按住）；介面中 = 返回\n互動 / 確認\n任務資訊\n照片收集\n暫停\n切換選項", 34, Color.white);
-        UIFactory.Place(funcs.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(40, -178), new Vector2(620, 560), new Vector2(0f, 1f));
-        funcs.lineSpacing = 1.2f;
-        var kb = UIFactory.Label(howToPanel.transform, "Keyboard", "沒有手把時（測試用）：WASD 移動 · 滑鼠視角 · Shift 奔跑 · Space 跳 · Ctrl/C 蹲 · E 互動 · Enter 確認 · Backspace 返回 · M 任務 · Tab 照片 · Esc 暫停",
-                                 26, new Color(0.7f, 0.8f, 0.9f), TextAnchor.MiddleCenter);
-        UIFactory.Place(kb.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 162), new Vector2(1600, 80));
+        string[] keys = { "左類比搖桿", "右類比搖桿", "RB", "LB", "B", "A", "X", "Y", "Start", "方向鍵 / 左搖桿" };
+        string[] actions = { "移動", "視角", "奔跑（按住）", "跳躍", "蹲下（按住）；介面中 = 返回", "互動 / 確認", "任務資訊", "照片收集", "暫停", "切換選項" };
+        var top = new Vector2(0.5f, 1f);
+        for (int i = 0; i < keys.Length; i++)
+        {
+            float y = -194f - 56f * i;
+            var key = UIFactory.Label(howToPanel.transform, "Key" + i, keys[i], 34, UIFactory.Cyan, TextAnchor.MiddleRight);
+            UIFactory.Place(key.rectTransform, top, top, new Vector2(-40, y), new Vector2(520, 54), new Vector2(1f, 0.5f));
+            var action = UIFactory.Label(howToPanel.transform, "Action" + i, actions[i], 34, Color.white, TextAnchor.MiddleLeft);
+            UIFactory.Place(action.rectTransform, top, top, new Vector2(40, y), new Vector2(700, 54), new Vector2(0f, 0.5f));
+        }
+        var kb = UIFactory.Label(howToPanel.transform, "Keyboard",
+            "鍵盤滑鼠：WASD 移動 · 滑鼠視角 · Shift 奔跑 · Space 跳躍 · Ctrl/C 蹲下\nE 互動 · Enter 確認 · Backspace 返回 · M 任務 · Tab 照片 · Esc 暫停",
+            26, new Color(0.7f, 0.8f, 0.9f), TextAnchor.MiddleCenter);
+        UIFactory.Place(kb.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 225), new Vector2(1600, 124), new Vector2(0.5f, 0.5f));
         howToBackButton = UIFactory.MakeButton(howToPanel.transform, "Back", "OK", CloseHowTo, 34, 360f, 76f);
         UIFactory.Place(howToBackButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 64), new Vector2(360, 76));
         howToPanel.SetActive(false);
@@ -282,11 +291,11 @@ public class UIManager : MonoBehaviour
 
         // 照片收集（Y）
         photoPanel = UIFactory.Panel(Root, "PhotoPanel", new Color(0.02f, 0.04f, 0.07f, 0.94f)).gameObject;
-        UIFactory.Place(photoPanel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1000, 700));
+        UIFactory.Place(photoPanel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1120, 820));
         var pt = UIFactory.Label(photoPanel.transform, "Title", "Photo Collection", 54, Color.white, TextAnchor.MiddleCenter);
         UIFactory.Place(pt.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -60), new Vector2(900, 80));
         photoPanelText = UIFactory.Label(photoPanel.transform, "Body", "", 40, Color.white, TextAnchor.UpperLeft, true);
-        UIFactory.Place(photoPanelText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 20), new Vector2(800, 380));
+        UIFactory.Place(photoPanelText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 12), new Vector2(1000, 508));
         photoPuzzleButton = UIFactory.MakeButton(photoPanel.transform, "Puzzle", "拼接照片", () =>
         {
             ClosePanel(photoPanel);
@@ -300,12 +309,12 @@ public class UIManager : MonoBehaviour
 
     void BuildOverlays()
     {
-        flashImg = UIFactory.Panel(Root, "DamageFlash", new Color(1, 0, 0, 0));
+        flashImg = UIFactory.Panel(Canvas.transform, "DamageFlash", new Color(1, 0, 0, 0));
         UIFactory.Stretch(flashImg.rectTransform);
         flashImg.raycastTarget = false;
         flashImg.gameObject.SetActive(false);
 
-        fadeImg = UIFactory.Panel(Root, "Fade", new Color(0, 0, 0, 1));
+        fadeImg = UIFactory.Panel(Canvas.transform, "Fade", new Color(0, 0, 0, 1));
         UIFactory.Stretch(fadeImg.rectTransform);
         fadeImg.raycastTarget = false;
     }
